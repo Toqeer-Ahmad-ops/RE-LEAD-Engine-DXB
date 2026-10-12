@@ -1,0 +1,36 @@
+{
+  "version": "day9-revised-gemini-3.5-flash-lite-outbox",
+  "model": "models/gemini-3.5-flash-lite",
+  "credential": "Gemini Toqeer Prod",
+  "workflow": "RE-LEAD-Engine-DXB-Prod",
+  "project_id": "mr5YkOdb77HzM1Yb",
+  "source": "n8n.lead_extraction",
+  "hubspot_contact": {
+    "phone": "={{ $json.phone }}",
+    "firstname": "={{ $json.name }}",
+    "lifecyclestage": "lead",
+    "lead_source": "whatsapp_re_lead_engine",
+    "dubai_dld_intent": "={{ $json.intent }}",
+    "grounded_rate": "={{ $json.grounded_rate }}",
+    "correlation_id": "={{ $json.correlation_id }}",
+    "hs_language": "={{ $json.language }}"
+  },
+  "hubspot_deal": {
+    "dealname": "={{ $json.name }} - {{ $json.project_interest || 'Dubai' }}",
+    "dealstage": "appointmentscheduled",
+    "amount": "={{ $json.budget }}",
+    "lead_score": "={{ $json.lead_score }}",
+    "routing_agent": "={{ $json.agent_assigned }}",
+    "routing_reason": "={{ $json.routing_reason }}"
+  },
+  "outbox": {
+    "table": "hubspot_outbox",
+    "idempotency_key": "={{ $json.phone }}_{{ $json.correlation_id }}",
+    "retry_on": [429, 401, 500],
+    "max_attempts": 3
+  },
+  "pause_flag": {
+    "table": "bot_pause_flags",
+    "ttl_hours": 2
+  }
+}
