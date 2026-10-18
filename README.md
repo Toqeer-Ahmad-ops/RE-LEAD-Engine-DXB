@@ -177,13 +177,13 @@ SELECT 53 as grounded, 5 as fallback, 91.4 as grounded_rate;
 ![Lead Intake Onward](docs/Lead-Intake-Onward.jpg)
 
 ### 5. WhatsApp Response – Create Deal -> Customer Alert AR
-![WhatsApp Response](docs/WhatsApp-Response-Customer-AR.PNG)
+![WhatsApp Response](docs/WhatsApp-Response-Customer-AR.png)
 
 ### 6. WhatsApp Response – Create Deal -> Customer Alert EN
-![WhatsApp Response](docs/WhatsApp-Response-Customer-EN.PNG)
+![WhatsApp Response](docs/WhatsApp-Response-Customer-EN.png)
 
 ### 7. WhatsApp LEAD Alert – Deal Alert -> Owner Alert
-![WhatsApp LEAD Alert](docs/WhatsApp-Lead-Alert.PNG)
+![WhatsApp LEAD Alert](docs/WhatsApp-Lead-Alert.png)
 
 
 ## 🐛 Production Bugs Fixed – Day 8 vs Day 9
