@@ -174,7 +174,17 @@ SELECT 53 as grounded, 5 as fallback, 91.4 as grounded_rate;
 ![SLA Monitor Cron 4K](docs/SLA-Monitor-Cron.jpg)
 
 ### 4. Lead Intake Onward – Validate -> Find Existing -> HubSpot Search -> Contact Exists? -> Create Deal -> Owner Alert
-![Lead Intake Onward](docs/SLA-Monitor-Cron.jpg)
+![Lead Intake Onward](docs/Lead-Intake-Onward.jpg)
+
+### 5. WhatsApp Response – Create Deal -> Customer Alert AR
+![WhatsApp Response](docs/WhatsApp-Response-Customer-AR.PNG)
+
+### 6. WhatsApp Response – Create Deal -> Customer Alert EN
+![WhatsApp Response](docs/WhatsApp-Response-Customer-EN.PNG)
+
+### 7. WhatsApp LEAD Alert – Deal Alert -> Owner Alert
+![WhatsApp LEAD Alert](docs/WhatsApp-Lead-Alert.PNG)
+
 
 ## 🐛 Production Bugs Fixed – Day 8 vs Day 9
 
