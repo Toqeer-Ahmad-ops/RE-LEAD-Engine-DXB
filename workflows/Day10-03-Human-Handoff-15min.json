@@ -1,0 +1,251 @@
+{
+  "name": "Day10-03-Human-Handoff-15min",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "466637fc-0b50-4709-9563-66947373439a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -16,
+        192
+      ],
+      "id": "9023e3f8-6952-4c1c-a26e-0132f8607f48",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "qualification_status",
+              "condition": "eq",
+              "keyValue": "needs_human"
+            },
+            {
+              "keyName": "handoff_required",
+              "condition": "eq",
+              "keyValue": "true"
+            },
+            {
+              "keyName": "updated_at",
+              "condition": "lte",
+              "keyValue": "={{ $now.minus({minutes: 15}).toISO() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        208,
+        96
+      ],
+      "id": "0942a52c-d4a9-4e2f-be36-d24b221dcc5d",
+      "name": "Get Leads Needing Human",
+      "credentials": {
+        "supabaseApi": {
+          "id": "uwAmK3QR0J2Wd1go",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "lead_activities",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "lead_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "activity_type",
+              "fieldValue": "human_handoff"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "==15-min SLA breached - Owner alert sent for {{$json.location}} - {{$json.name}}"
+            },
+            {
+              "fieldId": "metadata",
+              "fieldValue": "={{ { \"qualification_status\": $json.qualification_status, \"phone\": $json.phone, \"sla_minutes\": 15 } }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        432,
+        96
+      ],
+      "id": "81ecd321-8463-4511-8c94-d7c7333cbb5e",
+      "name": "Log to lead_activities - Human Handoff 15m",
+      "credentials": {
+        "supabaseApi": {
+          "id": "uwAmK3QR0J2Wd1go",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{$('Get Leads Needing Human').item.json.id}}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "follow_up_status",
+              "fieldValue": "handed_off"
+            },
+            {
+              "fieldId": "lifecycle_status",
+              "fieldValue": "needs_attention"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        656,
+        96
+      ],
+      "id": "9cf5870f-f544-4039-a596-0c0a3c45be1f",
+      "name": "Update leads - Mark handed_off",
+      "credentials": {
+        "supabaseApi": {
+          "id": "uwAmK3QR0J2Wd1go",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "toqeer.digitizer@gmail.com",
+        "subject": "=🔥 Human Handoff SLA 15m - {{$('Get Leads Needing Human').item.json.name}} - {{$('Get Leads Needing Human').item.json.location}}",
+        "emailType": "text",
+        "message": "=Lead needs human: {{ $json.phone }} - Qualification: {{ $json.qualification_status }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        96
+      ],
+      "id": "a46d111c-7c79-45de-b55a-8f67f1e4b38b",
+      "name": "Gmail - Owner Alert 15m SLA",
+      "webhookId": "258a3e53-c3ac-4bf8-a631-44fcc077c204",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "u9pNDVz9iDFIuNn0",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Leads Needing Human",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Leads Needing Human",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Leads Needing Human": {
+      "main": [
+        [
+          {
+            "node": "Log to lead_activities - Human Handoff 15m",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to lead_activities - Human Handoff 15m": {
+      "main": [
+        [
+          {
+            "node": "Update leads - Mark handed_off",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update leads - Mark handed_off": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Owner Alert 15m SLA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9ade53ff-861e-42d0-b2e1-ef353f5b7667",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8e66c5449e72620cf9a6b99d81b6bfc7b5a4be1edd8d4a0fe864152e0171afad"
+  },
+  "nodeGroups": [],
+  "id": "N7PMtu5u40TJmVtz",
+  "tags": []
+}
