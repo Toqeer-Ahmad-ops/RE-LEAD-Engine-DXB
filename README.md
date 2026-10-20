@@ -44,25 +44,26 @@ Production-grade WhatsApp RE-LEAD Engine — Voice + Text + Button Clicks → Bo
 
 <img width="1920" height="1280" alt="image" src="https://github.com/user-attachments/assets/0c360529-81dc-4594-aaba-def0c91a6543" />
 
-```mermaid
+ ```mermaid
 flowchart TD
-A[WhatsApp Webhook] --> B[Check Paused + Spam Guard + Idempotency]
-B --> C[Normalize + Detect Language + Route INFO vs LEAD]
-C -->|INFO| D[RAG API Qdrant + 91.4% Grounded + Voice Reply]
-C -->|LEAD| E[Validate Extraction + Find Existing Lead by phone unique]
-E --> F[Lead Exists? Merge-Preserve vs Create New Lead]
-F --> G[Deterministic Qualification JS: bedrooms && location && budget_max>=1M]
-G --> H[HubSpot Search Contact by Phone -> Create/Update Contact -> Create Deal]
-H --> I[Owner Alert Buttons + Voice Reply]
-I --> J[Mark Completed + Log Audit + Respond Webhook]
+    A["WhatsApp Webhook"] --> B["Check Paused + Spam Guard + Idempotency"]
+    B --> C["Normalize + Detect Language + Route INFO vs LEAD"]
+    C -->|INFO| D["RAG API Qdrant + 91.4% Grounded + Voice Reply"]
+    C -->|LEAD| E["Validate Extraction + Find Existing Lead by phone unique"]
+    E --> F["Lead Exists? Merge-Preserve vs Create New Lead"]
+    F --> G["Deterministic Qualification JS: bedrooms AND location AND budget_max GTE 1M"]
+    G --> H["【entity-HubSpot¦canonical_name=HubSpot】 Search Contact by Phone - Create/Update Contact - Create Deal"]
+    H --> I["Owner Alert Buttons + Voice Reply"]
+    I --> J["Mark Completed + Log Audit + Respond Webhook"]
 
-K[Day10-04 SLA Monitor Cron 1m] --> L[Get Leads follow_up_due_at <= now() + responded=false + active]
-L --> M[Log to error_logs lead_id FK + level=error + resolved=false]
-M --> N[Log to lead_activities sla_breach + metadata phone/source/error_log_id]
-N --> O[Update leads sla_breached + needs_attention + handoff_required=true]
-O --> P[Gmail Owner Alert 15m SLA]
-M --> Q[Day10-01 Central Error Handler Triggered by error_logs insert]
-```
+    K["Day10-04 SLA Monitor Cron 1m"] --> L["Get Leads follow_up_due_at LTE now + responded=false + active"]
+    L --> M["Log to error_logs lead_id FK + level=error + resolved=false"]
+    M --> N["Log to lead_activities sla_breach + metadata phone/source/error_log_id"]
+    N --> O["Update leads sla_breached + needs_attention + handoff_required=true"]
+    O --> P["Gmail Owner Alert 15m SLA"]
+    M --> Q["Day10-01 Central Error Handler Triggered by error_logs insert"]
+ ```
+
 ## 🔄 Combined Workflows – Day 10 (01-04)
 
 <img width="1920" height="1280" alt="image" src="https://github.com/user-attachments/assets/385dcc6a-34ba-405b-bfc2-23b12f5c541f" />
@@ -155,17 +156,17 @@ WHERE lifecycle_status='needs_attention' OR follow_up_status='sla_breached';
 ## 📸 Screenshots – Day 10
 
 ### 1. SLA Monitor 1-min Cron – All Green (After Reset Fix)
-![SLA Monitor Cron - All Green](docs/screenshots/day10-sla-monitor-cron-all-green.png)
+![SLA Monitor Cron - All Green](screenshots/day10-sla-monitor-cron-all-green.png)
 > 6 nodes • 12 items • Production mode • Execution #84217 – Success – 2.10s
 > `Schedule Trigger (1m) → Get Leads Needing Human → Log to error_logs - SLA Breach → Log to lead_activities - Human Handoff 15m → Update leads - Mark handed_off → Gmail - Owner Alert 15m SLA`
 
 ### 2. Supabase leads – 7 Records
-![Supabase leads 7 Records](docs/screenshots/day10-leads-7-records.png)
+![Supabase leads 7 Records](screenshots/day10-leads-7-records.png)
 ```sql
 SELECT * FROM leads WHERE lifecycle_status='active' — 7 rows inc. SLA Test - Palm Jumeirah
 ```
 ### 3. Supabase error_logs – 11x Day10-04 Breaches
-![Supabase error_logs 11 Breaches](docs/screenshots/day10-error-logs-11-breaches.png)
+![Supabase error_logs 11 Breaches](screenshots/day10-error-logs-11-breaches.png)
 ```sql
 SELECT 
   workflow_name, 
@@ -177,18 +178,18 @@ WHERE workflow_name = 'Day10-04-SLA-Monitor'
 ORDER BY created_at DESC;
 -- Result: 11 rows – SLA breached - Lead d5970f09...
 ```
-### 4. Supabase lead_activities – 33 Records sla_breach + human_hando
-![Supabase lead_activities 33](docs/screenshots/day10-lead-activities-33.jpg)
+### 4. Supabase lead_activities – 41 Records sla_breach + human_hando
+![Supabase lead_activities 33](screenshots/day10-lead-activities-33.png)
 ```sql
 SELECT
   activity_type,
   COUNT(*) as total
 FROM lead_activities
 GROUP BY activity_type;
--- 33 rows total (sla_breach + human_hando)
+-- 41 rows total (sla_breach + human_hando)
 ```
 ### 5. FK Violation Fix – $json.lead_id vs $json.id
-![FK Fix lead_id](docs/screenshots/day10-fk-fix-lead-id.jpg)
+![FK Fix lead_id](screenshots/day10-fk-fix-lead-id.jpg)
 > **Bug:** `insert on table lead_activities violates FK lead_activities_lead_id_fkey`
 > **Cause:** `{{ $json.id }}` = error_logs ID `69df1357...` not a real lead
 > **Fix:** `{{ $json.lead_id }}` or `{{ $('Get Leads Needing Human').item.json.id }}`
