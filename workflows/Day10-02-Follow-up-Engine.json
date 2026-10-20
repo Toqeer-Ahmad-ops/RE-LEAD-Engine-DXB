@@ -1,0 +1,262 @@
+{
+  "name": "Day10-02-Follow-up-Engine",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "e0f3fce6-0dbe-4adb-ab7c-b86ccf6eaa39",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -16,
+        192
+      ],
+      "id": "e64b1be2-7e39-4b77-8749-4578010117e7",
+      "name": "Daily 9AM DXB"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "limit": 10
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        208,
+        96
+      ],
+      "id": "ccda9ef6-73b7-4ecc-97bd-574c6d101689",
+      "name": "Get Leads Due",
+      "credentials": {
+        "supabaseApi": {
+          "id": "uwAmK3QR0J2Wd1go",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9c69dcab-4dd0-433d-b6b2-ad0f5397671e",
+              "leftValue": "={{$json.email}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f6068ef8-2630-493e-8409-8afe4350af19",
+              "leftValue": "={{$json.phone}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        432,
+        96
+      ],
+      "id": "8e9a81cc-aa12-4cd6-99ba-83379e968743",
+      "name": "IF Has Contact?"
+    },
+    {
+      "parameters": {
+        "tableId": "follow_up_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "workflow_name",
+              "fieldValue": "Day10-02-Follow-up-Engine"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "whatsapp"
+            },
+            {
+              "fieldId": "template_name",
+              "fieldValue": "followup_day10_v1"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "sent"
+            },
+            {
+              "fieldId": "message_content",
+              "fieldValue": "Hi, following up on your Dubai Marina 2BR - RE-LEAD Engine DXB"
+            },
+            {
+              "fieldId": "lead_id",
+              "fieldValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        656,
+        0
+      ],
+      "id": "9748f244-66d9-4d6b-be36-757bdb0c33d4",
+      "name": "Log to follow_up_logs",
+      "credentials": {
+        "supabaseApi": {
+          "id": "uwAmK3QR0J2Wd1go",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "lead_activities",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "lead_id",
+              "fieldValue": "={{ $('Get Leads Due').item.json.id }}"
+            },
+            {
+              "fieldId": "activity_type",
+              "fieldValue": "follow_up"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "Follow-up sent via whatsapp - Day10-02"
+            },
+            {
+              "fieldId": "metadata",
+              "fieldValue": "={{ { follow_up_channel: \"whatsapp\", location: $json.location || $('Get Leads Due').item.json.location } }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        656,
+        192
+      ],
+      "id": "bc681262-c595-4fe9-bd31-a84721049413",
+      "name": "Log to lead_activities",
+      "credentials": {
+        "supabaseApi": {
+          "id": "uwAmK3QR0J2Wd1go",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily 9AM DXB": {
+      "main": [
+        [
+          {
+            "node": "Get Leads Due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Leads Due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Leads Due": {
+      "main": [
+        [
+          {
+            "node": "IF Has Contact?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Has Contact?": {
+      "main": [
+        [
+          {
+            "node": "Log to follow_up_logs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Log to follow_up_logs": {
+      "main": [
+        [
+          {
+            "node": "Log to lead_activities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "BCuwiNcb2kepbrXs",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "ca953fcb-bd0e-47c5-8c91-fc4205de9371",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8e66c5449e72620cf9a6b99d81b6bfc7b5a4be1edd8d4a0fe864152e0171afad"
+  },
+  "nodeGroups": [],
+  "id": "6dnbV5SwaRaefCAq",
+  "tags": []
+}

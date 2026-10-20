@@ -1,0 +1,194 @@
+{
+  "name": "Day10-01-Central-Error-Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "476fcb1a-391a-4675-afe0-e89675198ab0",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst err = input.error || input;\nconst fullMsg = (err.message || err.errorMessage || JSON.stringify(input)).toString();\n\nreturn {\n  id: input.id,\n  workflow_name: 'My workflow',\n  node_name: err.name || 'Code in JavaScript',\n  error_message: fullMsg,\n  error_stack: err.stack || '',\n  payload: null,\n  level: fullMsg.toLowerCase().includes('critical') ? 'critical' : 'error',\n  resolved: false,\n  created_at: new Date().toISOString(),\n  resolved_at: null,\n  timestamp: new Date().toISOString(),\n  execution_id: input.execution?.id || ''\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "8930bc79-cd32-4714-8335-aa183f129c39",
+      "name": "Normalize Error"
+    },
+    {
+      "parameters": {
+        "tableId": "error_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "workflow_name",
+              "fieldValue": "={{$json.workflow_name}}"
+            },
+            {
+              "fieldId": "node_name",
+              "fieldValue": "={{$json.node_name}}"
+            },
+            {
+              "fieldId": "error_message",
+              "fieldValue": "={{$json.error_message}}"
+            },
+            {
+              "fieldId": "error_stack",
+              "fieldValue": "={{$json.error_stack}}"
+            },
+            {
+              "fieldId": "payload",
+              "fieldValue": "={{$json.payload}}"
+            },
+            {
+              "fieldId": "level",
+              "fieldValue": "={{$json.level}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "f46325d9-fdb6-4b2f-b88b-9e1c1a04883e",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "uwAmK3QR0J2Wd1go",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "90303ffc-e3df-4c4d-b310-cb825990bd05",
+              "leftValue": "={{$json.level}}",
+              "rightValue": "critical",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "9110a580-f664-423a-8954-4df99be349da",
+      "name": "IF Critical?"
+    },
+    {
+      "parameters": {
+        "sendTo": "toqeer.digitizer@gmail.com",
+        "subject": "=CRITICAL: {{$json.workflow_name}}",
+        "emailType": "text",
+        "message": "=Error in {{$json.workflow_name}} / {{$json.node_name}}: {{$json.error_message}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "e1084511-3e37-43dc-9e17-5252f1338ea6",
+      "name": "Alert Agent",
+      "webhookId": "27f1f15e-c85d-4373-9c94-2394cec77175",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "u9pNDVz9iDFIuNn0",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Error": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "IF Critical?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Critical?": {
+      "main": [
+        [
+          {
+            "node": "Alert Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5834863c-89d4-482a-badc-d2d1235648c6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8e66c5449e72620cf9a6b99d81b6bfc7b5a4be1edd8d4a0fe864152e0171afad"
+  },
+  "nodeGroups": [],
+  "id": "BCuwiNcb2kepbrXs",
+  "tags": []
+}
