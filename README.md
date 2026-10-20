@@ -15,10 +15,13 @@
 ![Owner Alert](https://img.shields.io/badge/Owner%20Alert-Buttons%20Interactive-FF6B6B?logo=whatsapp)
 ![Buttons](https://img.shields.io/badge/Buttons-Click%20Router-orange)
 
-Production-grade WhatsApp RE-LEAD Engine — Voice + Text + Button Clicks → Bot Language Tags → Transcription → RAG → **Lead Intake, Qualification, HubSpot Sync, Owner Alert, Voice Reply & SLA Monitoring**
-
-> Day 9/23 of 23-Day AI Sprint | SLA Monitor Cron Live | HubSpot Contact + Deal Automation | Voice Reply + Rename Voice | Paused/Spam Guard | 91.4% grounded carry-over from Day 8 | Audit Logging
-
+**Follow-up Engine + Central Error Handler**
+- Schedule Trigger 9AM Asia/Dubai + Manual Trigger → Get Leads Due (Supabase `leads`)
+- IF Has Contact? `email isNotEmpty OR phone isNotEmpty` → Guard against null
+- Log to `follow_up_logs` (system audit) + `lead_activities` (human timeline) with FK `lead_id = {{$json.id}}`
+- Central Error Handler workflow → logs to `error_logs` table (set as Error Workflow in Settings)
+- Expression pattern: `$('Get Leads Due').item.json.id` to preserve lead id after logging
+Production-grade: Voice + Text + Button Clicks → Bot Language Tags → Transcription → RAG → Lead Intake, Qualification, 【entity-HubSpot¦canonical_name=HubSpot】 Sync, Owner Alert, Voice Reply, SLA Monitoring + **Follow-up Automation**
 ---
 
 ## ✨ Features – Day 9 Upgrade (vs Day 8)
